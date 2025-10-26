@@ -6,7 +6,7 @@
 
 ## 1. Purpose
 
-The `fc:` namespace provides metadata that links an RSS feed to a Farcaster identity via its **fname** (human-readable Farcaster name).
+The `fc:` namespace provides metadata that links an RSS feed to a Farcaster identity via its **fname** (human-readable Farcaster name).  
 It also enables specification of a canonical feed URL for reference in casts (e.g., as a `parentUrl`).
 
 ## 2. Namespace Declaration
@@ -24,9 +24,9 @@ The namespace **MUST** be declared on the root `<rss>` element:
 
 Represents the publisher’s Farcaster **fname**.
 
-- **Type:** string
-- **Cardinality:** `0–1` per `<channel>`
-- **Scope:** feed-level only
+- **Type:** string  
+- **Cardinality:** `0–1` per `<channel>`  
+- **Scope:** feed-level only  
 - **Example:** `alice` (without the `@` prefix)
 
 #### Example usage:
@@ -45,8 +45,8 @@ Represents the publisher’s Farcaster **fname**.
 Represents the **canonical URL of the feed itself**.
 
 - **Intended usage:** as a `parentUrl` reference for Farcaster casts
-- **Type:** absolute URL
-- **Cardinality:** `0–1` per `<channel>`
+- **Type:** absolute URL  
+- **Cardinality:** `0–1` per `<channel>`  
 - **Scope:** feed-level only
 
 #### Example usage:
@@ -70,15 +70,15 @@ Represents the **canonical URL of the feed itself**.
 
 ## 4. Semantics
 
-- Presence of `fc:fname` asserts that the feed’s publisher uses that Farcaster name.
-- `fc:canonical` asserts the canonical identity of the RSS document.
-- Absence of these fields makes no claim.
+- Presence of `fc:fname` asserts that the feed’s publisher uses that Farcaster name.  
+- `fc:canonical` asserts the canonical identity of the RSS document.  
+- Absence of these fields makes no claim.  
 - Because fnames can change, consumers should treat them as *current*, not immutable.
 
 ## 5. Placement Rules
 
-- `fc:fname` and `fc:canonical` **MUST** appear only as direct children of `<channel>`.
-- They **MUST NOT** appear inside `<item>`.
+- `fc:fname` and `fc:canonical` **MUST** appear only as direct children of `<channel>`.  
+- They **MUST NOT** appear inside `<item>`.  
 - If multiple occurrences appear, consumers should use the **first**.
 
 ## 6. Processing Expectations
@@ -96,8 +96,8 @@ Represents the **canonical URL of the feed itself**.
 
 ## 7. Validation & Compatibility
 
-- This extension follows RSS 2.0’s extensibility rules.
-- Unknown namespaced elements are ignored by standard RSS parsers.
+- This extension follows RSS 2.0’s extensibility rules.  
+- Unknown namespaced elements are ignored by standard RSS parsers.  
 - XML validity must be preserved.
 
 ## 8. Security Considerations
@@ -107,7 +107,7 @@ Represents the **canonical URL of the feed itself**.
 
 ## 9. Versioning
 
-The namespace URI encodes version `1.0`.
+The namespace URI encodes version `1.0`.  
 Breaking changes require a new namespace URI (e.g., `…/2.0`).
 
 ## 10. Complete Example
@@ -136,5 +136,79 @@ Breaking changes require a new namespace URI (e.g., `…/2.0`).
 
 ## 11. Reserved for Future Extensions
 
-Additional `fc:` elements may be defined later (e.g., key material, signatures, profile hints).
+Additional `fc:` elements may be defined later (e.g., key material, signatures, profile hints).  
 Consumers **MUST** ignore unknown `fc:` elements.
+
+## 12. Feed Update Signaling (Farcaster Integration)
+
+This section defines how feed updates **may** be signaled on Farcaster using casts referencing the canonical feed URL.
+
+### 12.1 Producer Behavior
+
+When the feed is updated (e.g., new item published):
+
+- Producers **SHOULD** publish a Farcaster cast:
+  - with `parentUrl` equal to the feed’s `fc:canonical` value, and
+  - with an **empty cast body** (i.e., no text content).
+
+- The cast **MUST** be posted by the Farcaster account whose `fname` is declared in the feed (`fc:fname`).
+
+#### Example
+
+```json
+{
+    "data": {
+      "castAddBody": {
+        "parentUrl": "https://blog.vrypan.net/rss.xml",
+        "text": ""
+      },
+      "fid": "280",
+      "network": "FARCASTER_NETWORK_MAINNET",
+      "timestamp": 151819607,
+      "type": "MESSAGE_TYPE_CAST_ADD"
+    },
+		...
+  }
+```
+
+### 12.2 Consumer Behavior
+
+Consumers **SHOULD** treat casts that meet *all* of the following conditions as feed-update notifications:
+
+- The cast’s `parentUrl` **matches exactly** the feed’s `fc:canonical` value.
+- The cast’s author `fname` **matches** the feed’s `fc:fname` value.
+- The cast’s text body is empty or whitespace-only.
+
+When such a cast is detected, consumers:
+
+- **SHOULD** fetch (or re-fetch) the feed.
+- **MAY** trigger item-level diff logic.
+- **SHOULD** de-duplicate multiple update casts within a short time window.
+
+### 12.3 Security Considerations
+
+- This mechanism is **not** cryptographic proof of authorship.
+- Consumers **SHOULD** rely on:
+  - Farcaster account ownership (`fname`)
+  - canonical feed URL match
+- Consumers **MAY** ignore update casts from other accounts, even if the `parentUrl` matches.
+
+### 12.4 Rate & Etiquette Guidelines
+
+Producers:
+
+- **SHOULD NOT** emit multiple update casts in rapid succession.
+- **MAY** emit one update cast per feed refresh cycle.
+
+Consumers:
+
+- **SHOULD** implement throttling (e.g., max one re-fetch attempt per minute per feed).
+
+### 12.5 Extensibility
+
+In future versions:
+
+- The update cast’s body MAY include metadata (e.g., item GUIDs).
+- Additional `fc:` elements MAY indicate richer update protocols.
+
+Consumers **MUST** ignore unknown fields.
