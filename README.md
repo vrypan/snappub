@@ -16,3 +16,7 @@ Files:
 - [fc-1.0.xsd](fc-1.0.xsd) — XML Schema defining element types and namespace
 
 All other fc: elements are reserved for future extension. Consumers MUST ignore unknown elements in the fc: namespace.
+
+## Tools
+
+[snappub-tools](https://github.com/vrypan/snappub-tools) is a set of tools to help testing and development of SnapPub apps.
