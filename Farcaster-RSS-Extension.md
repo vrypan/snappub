@@ -153,7 +153,7 @@ When the feed is updated (e.g., new item published):
 
 Producers **SHOULD** publish a Farcaster cast:
 - with `parentUrl` equal to the feed’s `fc:canonical` value
-- with an **empty** text body
+- with an **single newline** (\n) text body
 
 The cast **MUST** be posted by the Farcaster account whose `fname` is declared in `fc:fname`.
 
@@ -164,7 +164,7 @@ The cast **MUST** be posted by the Farcaster account whose `fname` is declared i
   "data": {
     "castAddBody": {
       "parentUrl": "https://blog.vrypan.net/rss.xml",
-      "text": ""
+      "text": "\n"
     },
     "fid": "280",
     "network": "FARCASTER_NETWORK_MAINNET",
