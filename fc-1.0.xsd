@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:fc="https://farcaster.xyz/ns/fc/1.0"
+    targetNamespace="https://farcaster.xyz/ns/fc/1.0"
+    elementFormDefault="qualified"
+    attributeFormDefault="unqualified">
+
+  <!-- fc:fname element -->
+  <xs:element name="fname" type="fc:fnameType"/>
+
+  <!-- fc:canonical element -->
+  <xs:element name="canonical" type="fc:canonicalType"/>
+
+  <!-- Fname MUST be ≥1 char, simple string -->
+  <xs:simpleType name="fnameType">
+    <xs:restriction base="xs:string">
+      <xs:minLength value="1"/>
+      <!-- OPTIONAL: uncomment to enforce lowercase alphanumerics
+      <xs:pattern value="[a-z0-9_]+"/>
+      -->
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- Canonical must be a URI -->
+  <xs:simpleType name="canonicalType">
+    <xs:restriction base="xs:anyURI">
+      <xs:minLength value="1"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>
