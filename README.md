@@ -1,5 +1,8 @@
 # SnapPub
 
+> [!NOTE]
+> This is currently a DRAFT. It may change considerably before it's stable.
+
 ## Farcaster RSS Extension (fc:)
 
 Defines a small RSS 2.0 extension that binds an RSS feed to a Farcaster identity (fname) and provides a canonical feed URL for use as a parentUrl in Farcaster casts.
