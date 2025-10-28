@@ -39,6 +39,70 @@ This means publishers broadcast once, while consumers can subscribe universally 
 
 > This design separates **trust** (handled by Snapchain’s identity layer) from **transport** (the broadcast feed), enabling global fan-out without any direct publisher–subscriber coordination.
 
+## Identity and Openness
+
+**Snapchain**, the underlying transport used by SnapPub, is an **open network** — anyone can publish a cast referencing any public URL as its `parentUrl`.  
+This openness makes it possible for updates, comments, and discussions to emerge organically across the web.
+
+However, Snapchain also provides **built-in identity and verification**, which allows consumers to distinguish between *authoritative updates* and *community interactions*.
+
+### 1. Open participation
+
+Any Farcaster user can publish a cast referencing a URL:
+
+```json
+{
+  "parentUrl": "https://example.com/post/hello",
+  "text": "Nice write-up on SnapPub!"
+}
+```
+
+This openness mirrors the web itself: anyone can link to or comment on a page.
+
+### 2. Verified identity
+
+Each cast on Snapchain is **signed** by its publisher and associated with a **Farcaster identity** (`fid` / `fname`).  
+This means consumers can make trust decisions based on identity, such as:
+
+- only process updates from the **authoritative publisher**
+- include comments from users they follow
+- ignore spam or unknown accounts
+
+Because Snapchain identity is cryptographically backed, consumers don’t need extra verification roundtrips.
+
+### 3. Authoritative publisher
+
+A resource (for example, an RSS feed) can declare which Farcaster identity is considered **authoritative** for its updates.
+
+In the SnapPub RSS extension (described later), this is indicated by:
+
+```xml
+<fc:fname>alice</fc:fname>
+```
+
+When a cast references this feed via `parentUrl`, consumers **SHOULD** treat casts from `@alice` as authoritative resource updates — and **MAY** ignore others.
+
+### 4. Rich identity context
+
+Farcaster identity includes a **rich metadata graph**, such as:
+
+- display name, avatar, bio, verification badges  
+- follow graph (who follows whom)  
+- reputation and history of interactions
+
+Consumers can leverage these properties to improve the experience around *non-authoritative* casts — such as displaying comments, mentions, or reactions from trusted users or known communities.
+
+#### Summary
+
+| Property | SnapPub / Snapchain behavior |
+|-----------|------------------------------|
+| **Open publishing** | Anyone can post a cast referencing any URL |
+| **Identity built-in** | Each cast is signed and linked to a Farcaster `fid` / `fname` |
+| **Authoritative source** | Feeds and resources can declare the trusted `fname` for updates |
+| **Social metadata** | Farcaster identity graph enables rich filtering, discovery, and reputation around resource discussions |
+
+
+
 ## Protocol Comparison
 
 | **Aspect** | **SnapPub** | **WebSub (PubSubHubbub)** | **ActivityPub** | **Webmention** |
