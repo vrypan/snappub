@@ -1,7 +1,9 @@
 # SnapPub
 
-> [!NOTE]
+> [!WARNING]
 > This is currently a DRAFT. It may change considerably before it's stable.
+>
+> Linked files and tools may be outdated!
 
 **SnapPub** is a lightweight, open protocol that enables publishers to announce updates to web resources.
 It leverages the **Snapchan** network (also known as **Farcaster**) to distribute update notifications through a single, global feed.
