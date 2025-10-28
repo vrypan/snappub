@@ -68,7 +68,7 @@ Each cast is signed and associated with a **Farcaster identity** (`fid` / `fname
 Consumers can make trust decisions based on that identity:
 
 - accept updates only from the **authoritative publisher**  
-- show comments or mentions from known users  
+- show comments, mentions, or reactions from known users  
 - ignore spam or unknown accounts  
 
 Because Snapchain identity is cryptographically backed, consumers don’t need extra verification roundtrips.
@@ -87,7 +87,7 @@ Consumers treat casts referencing this feed and authored by `@alice` as canonica
 ### Rich identity context
 
 Farcaster identity includes metadata such as avatar, bio, and social graph.  
-Consumers can use these properties to enhance *non-authoritative* updates like comments or mentions.
+Consumers can use these properties to enhance *non-authoritative* updates like comments, mentions, or reactions.
 
 #### Summary
 
@@ -102,13 +102,15 @@ Consumers can use these properties to enhance *non-authoritative* updates like c
 
 ## Basic Principles
 
-SnapPub uses Snapchain casts to inform the network about **updates** to a resource or **activity** related to it.
+SnapPub uses Snapchain messages to inform the network about **updates**, **discussions**, **mentions**, and **reactions** related to a web resource.
+In all cases, `parentUrl` is set to the resource URL.
 
-| Intent | `parentUrl` | `embedUrl` | Meaning |
-|--------|--------------|------------|----------|
-| **Resource update** | ✅ | `snappub:update` | The resource itself has changed (e.g., a feed was updated). |
-| **Comment** | ✅ | *(none)* | A message *about* the resource, such as a discussion or note. |
-| **Mention** | ✅ | `embedUrl=<url>` | Another resource (at `<url>`) references or links to the resource identified by `parentUrl`. |
+| Intent | `type` |`embedUrl` | Meaning |
+|--------|--------------|----------|----------|
+| **ResourceUpdate** | cast | `snappub:update` | The resource itself has changed (e.g., a feed was updated). |
+| **Comment** | cast | *any* | A message *about* the resource, such as a discussion or note. May include embedded media or links. |
+| **Mention** | cast | `snappub:mention` + one more external URL | Another resource (`<url>` value) references or links to the resource identified by `parentUrl`. |
+| **Reaction** | reaction | *(none)* | A Farcaster reaction (like or recast) referencing the resource directly. |
 
 ### Examples
 
@@ -120,8 +122,7 @@ SnapPub uses Snapchain casts to inform the network about **updates** to a resour
   "text": ""
 }
 ```
-Consumers interpret this as:  
-> “The resource at `https://example.com/feed.xml` has been updated.”
+> The resource at `https://example.com/feed.xml` has been updated.
 
 ---
 
@@ -129,11 +130,11 @@ Consumers interpret this as:
 ```json
 {
   "parentUrl": "https://example.com/post/hello",
-  "text": "Great post on static blogs!"
+  "text": "Great post on static blogs!",
+  "embeds": [{ "url": "https://images.example.com/thumb.jpg" }]
 }
 ```
-Consumers interpret this as:  
-> “This cast is a comment or discussion about the resource at `https://example.com/post/hello`.”
+> A discussion or note *about* the resource at `https://example.com/post/hello`.
 
 ---
 
@@ -142,23 +143,50 @@ Consumers interpret this as:
 {
   "parentUrl": "https://example.com/post/hello",
   "text": "Referenced in my latest blog post!",
-  "embeds": [{ "url": "https://anotherblog.net/posts/my-response" }]
+  "embeds": [
+    { "url": "https://anotherblog.net/posts/my-response" },
+    { "url": "snappub:mention" }
+  ]
 }
 ```
-Consumers interpret this as:  
-> “The cast mentions or links to the resource at `https://example.com/post/hello` from another URL.”
+> Another resource links to or references `https://example.com/post/hello`.
+
+---
+
+#### Reaction
+Reactions are native to Farcaster and require **no SnapPub-specific embed**.  
+They use `parentUrl=<resource>` and represent expressions like *likes* or *recasts*.
+
+```json
+{
+  "type": "reaction",
+  "reactionType": "like",
+  "parentUrl": "https://example.com/post/hello"
+}
+```
+> A reaction (like or recast) to the resource at `https://example.com/post/hello`.
 
 ---
 
 ### Summary
 
-- **Resource updates** signal change to the resource itself.  
-- **Comments** are discussions or feedback about the resource.  
-- **Mentions** link one resource to another, creating a verifiable, decentralized web of references.
+- **Resource updates** — signal a change to the resource itself.  
+- **Comments** — discussions or feedback about the resource.  
+- **Mentions** — link one resource to another.  
+- **Reactions** — Farcaster-native likes or recasts referencing the resource directly.
+
+---
+
+### Integration Notes
+
+- SnapPub **inherits** Farcaster’s first-class reaction system.  
+- Consumers **SHOULD** display reactions alongside comments and mentions when `parentUrl` matches a known resource.  
+- Since reactions are verified at the protocol layer, no SnapPub-specific syntax or embed is required.
 
 ---
 
 ## Protocol Comparison
+
 
 | **Aspect** | **SnapPub** | **WebSub (PubSubHubbub)** | **ActivityPub** | **Webmention** |
 |-------------|--------------|-----------------------------|-----------------|----------------|
@@ -166,16 +194,22 @@ Consumers interpret this as:
 | **Transport** | **Snapchan / Farcaster** — decentralized broadcast layer | HTTP POST via central hub | HTTP(S) with JSON-LD (ActivityStreams 2.0) | Direct HTTP POST |
 | **Delivery model** | **Broadcast:** one update → all consumers | **Push:** hub → subscribers | **Federated:** server-to-server | **Point-to-point:** source → target |
 | **Publisher requirements** | Publish one cast per update (`fc:canonical`) | Maintain hub + topic URLs | Host APIs and actor objects | POST notifications per link |
-| **Subscriber requirements** | None — just listen to global feed | Maintain callback endpoint | Maintain inbox | Receive POSTs |
+| **Subscriber requirements** | None — just listen to the global feed | Maintain callback endpoint | Maintain inbox | Receive POSTs |
 | **Auth / Verification** | **Handled by Snapchain.** Built-in identity and signatures. | HTTP challenge-response | Signed JSON-LD | Optional manual verification |
-| **Scalability** | **High.** Broadcast once, network handles propagation and auth. | Limited by hub capacity | Grows linearly with peers | Poor beyond small networks |
+| **Scalability** | **High.** Broadcast once; network handles propagation and authentication. | Limited by hub capacity | Grows linearly with peers | Poor beyond small networks |
 
 ---
 
 ## Applications
 
-SnapPub can be used for any type of **public resource update** (e.g., blog posts, podcasts, datasets, even DNS records).  
-This document focuses on its integration with RSS/Atom feeds.
+SnapPub can be used for any type of **public resource update** — for example:
+- Blog posts  
+- Podcasts  
+- Open data feeds  
+- Datasets or APIs  
+- Even DNS or configuration changes  
+
+However, this document focuses on its integration with RSS/Atom feeds.
 
 ---
 
