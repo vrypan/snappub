@@ -222,7 +222,8 @@ Two namespaced elements **MUST** appear directly under the `<channel>` element:
 - `<fc:fname>` — the publisher’s Farcaster fname  
 - `<fc:canonical>` — the canonical URL of the feed itself
 
-When a new item is published, producers **SHOULD** emit an empty cast whose `parentUrl` matches `fc:canonical`.  
+When a new item is published, producers **SHOULD** post an empty cast whose `parentUrl` matches `fc:canonical` and set `embedUrl=snappub:update`.
+
 Consumers **SHOULD** treat such casts — when authored by the declared `fc:fname` — as authoritative update notifications and re-fetch the feed.
 
 **Files**
