@@ -1,32 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xs:schema
-    xmlns:xs="http://www.w3.org/2001/XMLSchema"
-    xmlns:fc="https://farcaster.xyz/ns/fc/1.0"
-    targetNamespace="https://farcaster.xyz/ns/fc/1.0"
-    elementFormDefault="qualified"
-    attributeFormDefault="unqualified">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="https://farcaster.xyz/ns/fc/1.0"
+           xmlns:fc="https://farcaster.xyz/ns/fc/1.0"
+           elementFormDefault="qualified"
+           attributeFormDefault="unqualified">
 
-  <!-- fc:fname element -->
-  <xs:element name="fname" type="fc:fnameType"/>
+  <xs:annotation>
+    <xs:documentation>
+      Farcaster RSS Extension (fc:) — XSD 1.0
+      Defines required channel-level elements:
+        - fc:fname
+        - fc:canonical
+      Both MUST appear directly under <channel>.
+    </xs:documentation>
+  </xs:annotation>
 
-  <!-- fc:canonical element -->
-  <xs:element name="canonical" type="fc:canonicalType"/>
+  <!-- fc:fname -->
+  <xs:element name="fname" type="xs:string">
+    <xs:annotation>
+      <xs:documentation>
+        Publisher’s Farcaster fname (string without '@').
+        REQUIRED once per <channel>.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
 
-  <!-- Fname MUST be ≥1 char, simple string -->
-  <xs:simpleType name="fnameType">
-    <xs:restriction base="xs:string">
-      <xs:minLength value="1"/>
-      <!-- OPTIONAL: uncomment to enforce lowercase alphanumerics
-      <xs:pattern value="[a-z0-9_]+"/>
-      -->
-    </xs:restriction>
-  </xs:simpleType>
-
-  <!-- Canonical must be a URI -->
-  <xs:simpleType name="canonicalType">
-    <xs:restriction base="xs:anyURI">
-      <xs:minLength value="1"/>
-    </xs:restriction>
-  </xs:simpleType>
+  <!-- fc:canonical -->
+  <xs:element name="canonical" type="xs:anyURI">
+    <xs:annotation>
+      <xs:documentation>
+        Canonical feed URL (absolute URI).
+        REQUIRED once per <channel>.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
 
 </xs:schema>
