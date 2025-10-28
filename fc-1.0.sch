@@ -1,46 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schema xmlns="http://purl.oclc.org/dsdl/schematron"
-        xmlns:fc="https://farcaster.xyz/ns/fc/1.0"
-        queryBinding="xslt2">
+         xmlns:fc="https://farcaster.xyz/ns/fc/1.0">
 
-  <!-- ============================
-       Required extension elements
-       ============================ -->
-  <pattern id="fc-required">
+  <title>Farcaster RSS Extension (fc:) — Schematron 1.0</title>
+  <ns prefix="fc" uri="https://farcaster.xyz/ns/fc/1.0"/>
+
+  <pattern id="fc-elements">
+    <title>Required fc: elements in RSS channel</title>
+
+    <!-- fc:fname must exist once -->
     <rule context="channel">
-      <assert test="count(fc:fname)=1">
-        A compliant fc feed MUST contain exactly one fc:fname element under channel.
-      </assert>
-      <assert test="count(fc:canonical)=1">
-        A compliant fc feed MUST contain exactly one fc:canonical element under channel.
+      <assert test="count(fc:fname) = 1">
+        The <fc:fname> element MUST appear exactly once under <channel>.
       </assert>
     </rule>
-  </pattern>
 
-  <!-- ============================
-       Placement rules
-       ============================ -->
-  <pattern id="fc-placement">
-    <rule context="item">
-      <assert test="count(fc:fname)=0">
-        fc:fname MUST NOT appear inside item.
-      </assert>
-      <assert test="count(fc:canonical)=0">
-        fc:canonical MUST NOT appear inside item.
+    <!-- fc:canonical must exist once -->
+    <rule context="channel">
+      <assert test="count(fc:canonical) = 1">
+        The <fc:canonical> element MUST appear exactly once under <channel>.
       </assert>
     </rule>
-  </pattern>
 
-  <!-- ============================
-       No duplicates anywhere
-       ============================ -->
-  <pattern id="fc-no-duplicates">
-    <rule context="channel">
-      <assert test="count(fc:fname)=1">
-        fc:fname MUST appear exactly once.
-      </assert>
-      <assert test="count(fc:canonical)=1">
-        fc:canonical MUST appear exactly once.
+    <!-- fc:canonical must be an absolute URL -->
+    <rule context="fc:canonical">
+      <assert test="matches(normalize-space(.), '^(https?|ipfs)://')">
+        <fc:canonical> MUST contain an absolute URL (e.g., https://example.com/rss.xml).
       </assert>
     </rule>
   </pattern>
