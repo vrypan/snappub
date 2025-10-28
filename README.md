@@ -1,9 +1,9 @@
+# SnapPub
+
 > [!WARNING]
-> This is **WORK IN PROGRESS**. It may (and probably, will) change considerably before it's stable.
+> This is currently a DRAFT. It may change considerably before it's stable.
 >
 > Linked files and tools may be outdated!
-
-# SnapPub
 
 **SnapPub** is a lightweight, open protocol that enables publishers to announce updates to web resources.  
 It leverages the **Snapchan** network (also known as **Farcaster**) to distribute update notifications through a single, global feed.  
@@ -102,12 +102,13 @@ Consumers can use these properties to enhance *non-authoritative* updates like c
 
 ## Basic Principles
 
-SnapPub uses Snapchain casts to inform the network about resource updates or activity related to a URL.
+SnapPub uses Snapchain casts to inform the network about **updates** to a resource or **activity** related to it.
 
 | Intent | `parentUrl` | `embedUrl` | Meaning |
 |--------|--------------|------------|----------|
 | **Resource update** | ✅ | `snappub:update` | The resource itself has changed (e.g., a feed was updated). |
-| **Comment / mention** | ✅ | *(none)* | Discussion or metadata about the resource (comment, link, reaction). |
+| **Comment** | ✅ | *(none)* | A message *about* the resource, such as a discussion or note. |
+| **Mention** | ✅ | `embedUrl=<url>` | Another resource (at `<url>`) references or links to the resource identified by `parentUrl`. |
 
 ### Examples
 
@@ -119,20 +120,41 @@ SnapPub uses Snapchain casts to inform the network about resource updates or act
   "text": ""
 }
 ```
-
 Consumers interpret this as:  
 > “The resource at `https://example.com/feed.xml` has been updated.”
 
-#### Comment or mention
+---
+
+#### Comment
 ```json
 {
   "parentUrl": "https://example.com/post/hello",
   "text": "Great post on static blogs!"
 }
 ```
-
 Consumers interpret this as:  
-> “This cast is commentary or metadata about the resource at `https://example.com/post/hello`.”
+> “This cast is a comment or discussion about the resource at `https://example.com/post/hello`.”
+
+---
+
+#### Mention
+```json
+{
+  "parentUrl": "https://example.com/post/hello",
+  "text": "Referenced in my latest blog post!",
+  "embeds": [{ "url": "https://anotherblog.net/posts/my-response" }]
+}
+```
+Consumers interpret this as:  
+> “The cast mentions or links to the resource at `https://example.com/post/hello` from another URL.”
+
+---
+
+### Summary
+
+- **Resource updates** signal change to the resource itself.  
+- **Comments** are discussions or feedback about the resource.  
+- **Mentions** link one resource to another, creating a verifiable, decentralized web of references.
 
 ---
 
@@ -155,7 +177,9 @@ Consumers interpret this as:
 SnapPub can be used for any type of **public resource update** (e.g., blog posts, podcasts, datasets, even DNS records).  
 This document focuses on its integration with RSS/Atom feeds.
 
-### Farcaster RSS Extension (`fc:`)
+---
+
+## Farcaster RSS Extension (`fc:`)
 
 The **Farcaster RSS Extension** defines a small RSS 2.0 extension that binds an RSS feed to a Farcaster identity (`fc:fname`) and provides a canonical feed URL (`fc:canonical`) for use as a `parentUrl` in SnapPub casts.
 
@@ -176,7 +200,9 @@ Consumers **SHOULD** treat such casts — when authored by the declared `fc:fnam
 All other `fc:` elements are reserved for future extension.  
 Consumers **MUST** ignore unknown elements in the `fc:` namespace.
 
-### Tools
+---
+
+## Tools
 
 [`snappub-tools`](https://github.com/vrypan/snappub-tools) provides utilities for testing and developing SnapPub-compatible applications.
 
